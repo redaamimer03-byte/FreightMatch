@@ -1,156 +1,431 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FreightMatch</title>
+import { useState, useEffect, useRef } from "react";
 
-<style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial, sans-serif;
+const V = "#6C3BFF";
+const VD = "#4B2AD4";
+const VL = "#A78BFA";
+
+function useCountUp(target, duration = 2000, start = false) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!start) return;
+    let s = null;
+    const step = (ts) => {
+      if (!s) s = ts;
+      const p = Math.min((ts - s) / duration, 1);
+      setValue(Math.floor(p * target));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration, start]);
+  return value;
 }
 
-body{
-background:#f5f7fa;
+function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", h);
+    return () => window.removeEventListener("scroll", h);
+  }, []);
+  return (
+    <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,background:"rgba(255,255,255,0.97)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.07)":"0 1px 0 #eee",backdropFilter:"blur(12px)",padding:"0 40px",transition:"box-shadow 0.3s"}}>
+      <div style={{maxWidth:1280,margin:"0 auto",display:"flex",alignItems:"center",height:70,gap:32}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",flexShrink:0}}>
+          <img src="/mnt/user-data/uploads/icon.png" alt="FreightMatch" style={{width:42,height:42,borderRadius:10,objectFit:"cover"}}/>
+          <span style={{fontWeight:800,fontSize:21,color:"#111",fontFamily:"'Syne',sans-serif",letterSpacing:-0.3}}>Freight<span style={{color:V}}>Match</span></span>
+        </div>
+        <div style={{display:"flex",gap:32,alignItems:"center",flex:1,justifyContent:"center"}}>
+          {[["Accueil",true],["Services",false],["Comment ça marche",false],["À propos",false],["Contact",false]].map(([lbl,active])=>(
+            <a key={lbl} href="#" style={{fontSize:15,fontWeight:active?700:500,color:active?V:"#333",textDecoration:"none",transition:"color 0.2s",whiteSpace:"nowrap"}}
+              onMouseEnter={e=>e.target.style.color=V} onMouseLeave={e=>e.target.style.color=active?V:"#333"}>{lbl}</a>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:10,alignItems:"center",flexShrink:0}}>
+          <button style={{padding:"10px 22px",borderRadius:10,border:"1.5px solid #ddd",background:"#fff",color:"#222",fontWeight:600,fontSize:14,cursor:"pointer",transition:"all 0.2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=V;e.currentTarget.style.color=V;}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor="#ddd";e.currentTarget.style.color="#222";}}>Se connecter</button>
+          <button style={{padding:"10px 24px",borderRadius:10,border:"none",background:V,color:"#fff",fontWeight:700,fontSize:14,cursor:"pointer",boxShadow:"0 4px 14px rgba(108,59,255,0.35)",transition:"all 0.2s"}}
+            onMouseEnter={e=>{e.currentTarget.style.background=VD;e.currentTarget.style.transform="translateY(-1px)";}}
+            onMouseLeave={e=>{e.currentTarget.style.background=V;e.currentTarget.style.transform="translateY(0)";}}>S'inscrire</button>
+        </div>
+      </div>
+    </nav>
+  );
 }
 
-nav{
-background:#0d6efd;
-color:white;
-padding:15px 50px;
-display:flex;
-justify-content:space-between;
-align-items:center;
+function StatBar() {
+  const [started, setStarted] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setStarted(true); }, {threshold:0.3});
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  const c1 = useCountUp(12540, 2200, started);
+  const c2 = useCountUp(2350, 2200, started);
+  const c3 = useCountUp(1230, 2200, started);
+  return (
+    <div ref={ref} style={{background:"#fff",margin:"0 32px",borderRadius:"20px 20px 0 0",boxShadow:"0 -4px 40px rgba(108,59,255,0.08), 0 0 0 1px #f0eeff",padding:"28px 40px",display:"flex",flexWrap:"wrap",gap:0,justifyContent:"space-around"}}>
+      {[
+        {icon:"🚚",val:`${c1.toLocaleString()}+`,label:"Expéditions livrées",trend:"+18% ce mois"},
+        {icon:"👥",val:`${c2.toLocaleString()}+`,label:"Transporteurs actifs",trend:"+15% ce mois"},
+        {icon:"📦",val:`${c3.toLocaleString()}+`,label:"Colis en cours",trend:"+12% ce mois"},
+        {icon:"⭐",val:"4.8/5",label:"Satisfaction client",stars:true},
+      ].map((s,i)=>(
+        <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"8px 24px"}}>
+          <span style={{fontSize:28,color:V}}>{s.icon}</span>
+          <div>
+            <div style={{fontSize:11,color:"#999",marginBottom:2,fontWeight:500}}>{s.label}</div>
+            <div style={{fontSize:26,fontWeight:800,color:"#111",fontFamily:"'Syne',sans-serif",lineHeight:1}}>{s.val}</div>
+            {s.trend&&<div style={{fontSize:12,color:"#10b981",fontWeight:600,marginTop:2}}>{s.trend}</div>}
+            {s.stars&&<div style={{display:"flex",gap:2,marginTop:4}}>{[1,2,3,4].map(i=><span key={i} style={{color:"#f59e0b",fontSize:14}}>★</span>)}<span style={{color:"#d1d5db",fontSize:14}}>★</span></div>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-nav ul{
-display:flex;
-list-style:none;
-gap:20px;
+function Hero() {
+  return (
+    <section style={{paddingTop:70,minHeight:"92vh",background:"linear-gradient(135deg,#f8f7ff 0%,#f0eeff 40%,#e8f0ff 100%)",position:"relative",overflow:"hidden",display:"flex",flexDirection:"column"}}>
+      <div style={{maxWidth:1280,margin:"0 auto",width:"100%",padding:"0 40px",display:"flex",alignItems:"center",flex:1,minHeight:"calc(92vh - 70px)",gap:0}}>
+        {/* Left */}
+        <div style={{flex:"0 0 52%",paddingRight:32,paddingTop:20,paddingBottom:60,zIndex:2}}>
+          <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"#ede9fe",border:"1px solid #c4b5fd",borderRadius:100,padding:"7px 16px",marginBottom:28}}>
+            <span style={{fontSize:14}}>🚀</span>
+            <span style={{fontSize:13.5,color:V,fontWeight:600}}>Plateforme de transport intelligente</span>
+          </div>
+          <h1 style={{fontSize:"clamp(38px,4.5vw,62px)",fontWeight:900,color:"#111",lineHeight:1.1,marginBottom:20,fontFamily:"'Syne',sans-serif",letterSpacing:-2}}>
+            Connecter les entreprises<br/>avec les transporteurs<br/><span style={{color:V}}>rapidement et efficacement</span>
+          </h1>
+          <p style={{fontSize:17,color:"#555",lineHeight:1.7,marginBottom:36,maxWidth:480}}>
+            FreightMatch simplifie vos expéditions grâce à une mise en relation intelligente et un suivi en temps réel.
+          </p>
+          <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
+            <button style={{display:"flex",alignItems:"center",gap:8,padding:"15px 30px",borderRadius:12,border:"none",background:V,color:"#fff",fontWeight:700,fontSize:15.5,cursor:"pointer",boxShadow:"0 8px 28px rgba(108,59,255,0.38)",transition:"all 0.25s"}}
+              onMouseEnter={e=>{e.currentTarget.style.background=VD;e.currentTarget.style.transform="translateY(-2px)";}}
+              onMouseLeave={e=>{e.currentTarget.style.background=V;e.currentTarget.style.transform="translateY(0)";}}>
+              Trouver un transporteur <span style={{fontSize:18}}>→</span>
+            </button>
+            <button style={{display:"flex",alignItems:"center",gap:8,padding:"15px 30px",borderRadius:12,border:"1.5px solid #ccc",background:"#fff",color:"#222",fontWeight:600,fontSize:15.5,cursor:"pointer",transition:"all 0.25s"}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor=V;e.currentTarget.style.color=V;}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor="#ccc";e.currentTarget.style.color="#222";}}>
+              Expédier un colis <span style={{fontSize:18}}>→</span>
+            </button>
+          </div>
+          <div style={{display:"flex",gap:32,marginTop:44,flexWrap:"wrap"}}>
+            {[{icon:"🛡",t:"Transport sécurisé",s:"et fiable"},{icon:"🏷",t:"Meilleurs prix",s:"garantis"},{icon:"📍",t:"Suivi en temps réel",s:"24/7"}].map(item=>(
+              <div key={item.t} style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:22,color:V}}>{item.icon}</span>
+                <div>
+                  <div style={{fontWeight:700,fontSize:14,color:"#111"}}>{item.t}</div>
+                  <div style={{fontSize:12,color:"#888"}}>{item.s}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Right: Real Truck Photo */}
+        <div style={{flex:"0 0 52%",position:"relative",display:"flex",alignItems:"center",justifyContent:"flex-end",overflow:"hidden"}}>
+          {/* Fade left edge to blend with hero background */}
+          <div style={{
+            position:"absolute",left:0,top:0,bottom:0,width:"38%",zIndex:2,
+            background:"linear-gradient(to right, #f0eeff 0%, transparent 100%)",
+            pointerEvents:"none",
+          }}/>
+          <img
+            src="/mnt/user-data/uploads/Home_page_copie.png"
+            alt="Camion FreightMatch"
+            style={{
+              width:"100%",
+              maxWidth:700,
+              objectFit:"cover",
+              objectPosition:"center",
+              display:"block",
+              filter:"drop-shadow(0 20px 50px rgba(108,59,255,0.18))",
+            }}
+          />
+        </div>
+      </div>
+      <StatBar/>
+    </section>
+  );
 }
 
-nav a{
-color:white;
-text-decoration:none;
-font-weight:bold;
+function HowItWorks() {
+  const steps=[
+    {n:"01",icon:"📋",title:"Publiez votre demande",desc:"Décrivez vos marchandises, indiquez l'origine, la destination, le poids et votre budget."},
+    {n:"02",icon:"🤝",title:"Recevez des offres",desc:"Notre algorithme sélectionne automatiquement les meilleurs transporteurs disponibles pour vous."},
+    {n:"03",icon:"📍",title:"Suivez en temps réel",desc:"Localisez votre livraison sur la carte GPS avec des notifications à chaque étape."},
+    {n:"04",icon:"✅",title:"Confirmez la réception",desc:"Validez la livraison, évaluez le transporteur et recevez votre facture automatiquement."},
+  ];
+  return (
+    <section style={{padding:"100px 40px",background:"#fff"}}>
+      <div style={{maxWidth:1280,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:64}}>
+          <div style={{fontSize:12.5,color:V,fontWeight:700,letterSpacing:2.5,textTransform:"uppercase",marginBottom:12}}>Processus simple</div>
+          <h2 style={{fontSize:"clamp(28px,3.5vw,46px)",fontWeight:800,color:"#111",fontFamily:"'Syne',sans-serif",letterSpacing:-1.5}}>Comment ça marche ?</h2>
+          <p style={{color:"#777",fontSize:16,marginTop:14,maxWidth:500,margin:"14px auto 0"}}>En 4 étapes simples, trouvez le transporteur idéal pour vos besoins logistiques.</p>
+        </div>
+        <div style={{display:"flex",gap:24,flexWrap:"wrap"}}>
+          {steps.map((s,i)=>(
+            <div key={i} style={{flex:"1 1 220px",minWidth:210,background:"#fafafa",border:"1.5px solid #f0eeff",borderRadius:22,padding:"36px 28px",position:"relative",transition:"all 0.3s",cursor:"default"}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor=V;e.currentTarget.style.boxShadow="0 12px 40px rgba(108,59,255,0.12)";e.currentTarget.style.transform="translateY(-4px)";}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor="#f0eeff";e.currentTarget.style.boxShadow="none";e.currentTarget.style.transform="translateY(0)";}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#d1d5db",letterSpacing:1,marginBottom:18}}>{s.n}</div>
+              <div style={{width:52,height:52,borderRadius:16,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,marginBottom:18}}>{s.icon}</div>
+              <div style={{fontWeight:700,fontSize:17,color:"#111",marginBottom:10}}>{s.title}</div>
+              <div style={{fontSize:14,color:"#777",lineHeight:1.65}}>{s.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 }
 
-.hero{
-height:80vh;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-text-align:center;
-padding:20px;
+function Features() {
+  const items=[
+    {icon:"💸",title:"Réduction des coûts",desc:"Jusqu'à 35% d'économies sur vos frais logistiques grâce à notre mise en relation optimisée."},
+    {icon:"⚡",title:"Rapidité & Efficacité",desc:"Trouvez un transporteur disponible en moins de 15 minutes, 24h/24 et 7j/7."},
+    {icon:"🛡",title:"Sécurité garantie",desc:"Transporteurs vérifiés, assurés et notés par notre communauté d'utilisateurs."},
+    {icon:"📡",title:"Suivi GPS temps réel",desc:"Localisez votre chargement à tout moment sur notre carte interactive."},
+    {icon:"🔄",title:"Optimisation des trajets",desc:"Notre IA calcule les trajets les plus efficaces pour réduire délais et coûts."},
+    {icon:"🚚",title:"Zéro trajet à vide",desc:"Nous connectons les retours à vide avec des demandes pour maximiser les revenus."},
+  ];
+  return (
+    <section style={{padding:"100px 40px",background:"#f8f7ff"}}>
+      <div style={{maxWidth:1280,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:64}}>
+          <div style={{fontSize:12.5,color:V,fontWeight:700,letterSpacing:2.5,textTransform:"uppercase",marginBottom:12}}>Nos avantages</div>
+          <h2 style={{fontSize:"clamp(28px,3.5vw,46px)",fontWeight:800,color:"#111",fontFamily:"'Syne',sans-serif",letterSpacing:-1.5}}>Pourquoi choisir FreightMatch ?</h2>
+        </div>
+        <div style={{display:"flex",gap:20,flexWrap:"wrap"}}>
+          {items.map(item=>{
+            const [hov,setHov]=useState(false);
+            return (
+              <div key={item.title} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+                style={{flex:"1 1 280px",minWidth:250,background:hov?V:"#fff",borderRadius:22,padding:"32px 28px",boxShadow:hov?"0 16px 48px rgba(108,59,255,0.28)":"0 2px 16px rgba(108,59,255,0.06)",border:`1.5px solid ${hov?V:"#ede9fe"}`,transition:"all 0.32s",cursor:"default"}}>
+                <div style={{width:52,height:52,borderRadius:14,background:hov?"rgba(255,255,255,0.18)":"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,marginBottom:18,transition:"background 0.3s"}}>{item.icon}</div>
+                <div style={{fontWeight:700,fontSize:17,color:hov?"#fff":"#111",marginBottom:8,transition:"color 0.3s"}}>{item.title}</div>
+                <div style={{fontSize:14,color:hov?"rgba(255,255,255,0.8)":"#777",lineHeight:1.65,transition:"color 0.3s"}}>{item.desc}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
 }
 
-.hero h1{
-font-size:50px;
-color:#0d6efd;
-margin-bottom:20px;
+function Dashboards() {
+  const [tab,setTab]=useState("client");
+  return (
+    <section style={{padding:"100px 40px",background:"#fff"}}>
+      <div style={{maxWidth:1280,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:48}}>
+          <div style={{fontSize:12.5,color:V,fontWeight:700,letterSpacing:2.5,textTransform:"uppercase",marginBottom:12}}>Interfaces dédiées</div>
+          <h2 style={{fontSize:"clamp(28px,3.5vw,46px)",fontWeight:800,color:"#111",fontFamily:"'Syne',sans-serif",letterSpacing:-1.5}}>Un espace pour chaque profil</h2>
+        </div>
+        <div style={{display:"flex",gap:0,justifyContent:"center",marginBottom:40,background:"#f3f0ff",borderRadius:14,padding:5,width:"fit-content",margin:"0 auto 40px"}}>
+          {[["client","🏢 Client"],["transporteur","🚛 Transporteur"],["admin","⚙️ Admin"]].map(([k,lbl])=>(
+            <button key={k} onClick={()=>setTab(k)} style={{padding:"11px 28px",borderRadius:10,border:"none",background:tab===k?V:"transparent",color:tab===k?"#fff":"#555",fontWeight:600,fontSize:14,cursor:"pointer",transition:"all 0.25s",boxShadow:tab===k?"0 4px 14px rgba(108,59,255,0.35)":"none"}}>{lbl}</button>
+          ))}
+        </div>
+        <div style={{background:"#f8f7ff",borderRadius:28,padding:32,border:"1.5px solid #ede9fe"}}>
+          {tab==="client"&&(
+            <div>
+              <div style={{fontWeight:700,fontSize:20,color:"#111",marginBottom:24,fontFamily:"'Syne',sans-serif"}}>👋 Bonjour Ahmed — Tableau de bord Client</div>
+              <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:28}}>
+                {[["📦","8","Livraisons actives"],["✅","124","Terminées"],["⏳","3","En attente"],["💰","48 200 MAD","Total dépensé"]].map(([ic,v,l])=>(
+                  <div key={l} style={{flex:"1 1 160px",background:"#fff",border:"1.5px solid #ede9fe",borderRadius:18,padding:"20px 18px"}}>
+                    <div style={{fontSize:24,marginBottom:6}}>{ic}</div>
+                    <div style={{color:"#111",fontWeight:800,fontSize:24}}>{v}</div>
+                    <div style={{color:"#999",fontSize:12}}>{l}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{background:"#fff",borderRadius:18,padding:"20px 24px",border:"1px solid #ede9fe"}}>
+                <div style={{color:"#555",fontWeight:600,fontSize:14,marginBottom:16}}>Livraisons récentes</div>
+                {[{id:"#FM-2847",route:"Casablanca → Rabat",s:"En route",c:V},{id:"#FM-2841",route:"Tanger → Fès",s:"Livré",c:"#10b981"},{id:"#FM-2835",route:"Marrakech → Agadir",s:"En attente",c:"#f59e0b"}].map(item=>(
+                  <div key={item.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 0",borderBottom:"1px solid #f3f0ff"}}>
+                    <div><div style={{color:"#111",fontWeight:600,fontSize:14}}>{item.id}</div><div style={{color:"#999",fontSize:12}}>{item.route}</div></div>
+                    <div style={{background:`${item.c}18`,color:item.c,borderRadius:8,padding:"4px 14px",fontSize:12,fontWeight:700}}>{item.s}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {tab==="transporteur"&&(
+            <div>
+              <div style={{fontWeight:700,fontSize:20,color:"#111",marginBottom:24,fontFamily:"'Syne',sans-serif"}}>🚛 Tableau de bord Transporteur — Hassan</div>
+              <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:28}}>
+                {[["🛣","12","Missions dispo"],["✅","89","Complétées"],["⭐","4.8/5","Note moyenne"],["💵","32 400 MAD","Ce mois"]].map(([ic,v,l])=>(
+                  <div key={l} style={{flex:"1 1 160px",background:"#fff",border:"1.5px solid #ede9fe",borderRadius:18,padding:"20px 18px"}}>
+                    <div style={{fontSize:24,marginBottom:6}}>{ic}</div>
+                    <div style={{color:"#111",fontWeight:800,fontSize:22}}>{v}</div>
+                    <div style={{color:"#999",fontSize:12}}>{l}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{background:"#fff",borderRadius:18,padding:"20px 24px",border:"1px solid #ede9fe"}}>
+                <div style={{color:"#555",fontWeight:600,fontSize:14,marginBottom:16}}>Offres disponibles</div>
+                {[{r:"Casablanca → Oujda",c:"8T · Alimentaire",p:"2 800 MAD"},{r:"Rabat → Agadir",c:"5T · Electronique",p:"3 200 MAD"},{r:"Fès → Tanger",c:"12T · BTP",p:"1 900 MAD"}].map(item=>(
+                  <div key={item.r} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 0",borderBottom:"1px solid #f3f0ff"}}>
+                    <div><div style={{color:"#111",fontWeight:600,fontSize:14}}>📍 {item.r}</div><div style={{color:"#999",fontSize:12}}>{item.c}</div></div>
+                    <div style={{display:"flex",gap:10,alignItems:"center"}}><span style={{color:V,fontWeight:700,fontSize:15}}>{item.p}</span><button style={{background:V,border:"none",color:"#fff",borderRadius:8,padding:"7px 16px",fontSize:12,cursor:"pointer",fontWeight:700}}>Accepter</button></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {tab==="admin"&&(
+            <div>
+              <div style={{fontWeight:700,fontSize:20,color:"#111",marginBottom:24,fontFamily:"'Syne',sans-serif"}}>⚙️ Tableau de bord Administrateur</div>
+              <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:28}}>
+                {[["👥","10 923","Utilisateurs"],["🚛","2 401","Transporteurs"],["📦","58 247","Livraisons"],["💰","4.2M MAD","Volume"]].map(([ic,v,l])=>(
+                  <div key={l} style={{flex:"1 1 160px",background:"#fff",border:"1.5px solid #ede9fe",borderRadius:18,padding:"20px 18px"}}>
+                    <div style={{fontSize:24,marginBottom:6}}>{ic}</div>
+                    <div style={{color:"#111",fontWeight:800,fontSize:22}}>{v}</div>
+                    <div style={{color:"#999",fontSize:12}}>{l}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{background:"#fff",borderRadius:18,padding:"24px",border:"1px solid #ede9fe"}}>
+                <div style={{color:"#555",fontWeight:600,fontSize:14,marginBottom:20}}>Croissance mensuelle</div>
+                <div style={{display:"flex",gap:8,alignItems:"flex-end",height:100}}>
+                  {[40,55,48,72,65,88,76,92,84,100,95,112].map((h,i)=>(
+                    <div key={i} style={{flex:1}}><div style={{width:"100%",height:`${h}%`,background:i===11?`linear-gradient(180deg,${V},${VL})`:"#ede9fe",borderRadius:"6px 6px 0 0"}}/></div>
+                  ))}
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",marginTop:8}}>
+                  {["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"].map(m=>(
+                    <div key={m} style={{fontSize:9,color:"#bbb",flex:1,textAlign:"center"}}>{m}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
 }
 
-.hero p{
-font-size:20px;
-max-width:700px;
-margin-bottom:30px;
+function Testimonials() {
+  const list=[
+    {name:"Karim El Fassi",role:"Directeur Logistique, CasaElec",av:"K",text:"FreightMatch a transformé notre chaîne logistique. Nous économisons 30% sur nos coûts de transport et le suivi en temps réel est exceptionnel.",stars:5},
+    {name:"Hassan Benali",role:"Transporteur indépendant, Fès",av:"H",text:"Depuis FreightMatch, je n'ai plus de trajets à vide. La plateforme me trouve des missions rapidement et mes revenus ont augmenté de 40%.",stars:5},
+    {name:"Fatima Zahra Alaoui",role:"Responsable Achats, TetouanImport",av:"F",text:"Interface intuitive, transporteurs fiables et professionnels. Je recommande vivement à toute entreprise qui fait du transport.",stars:5},
+  ];
+  return (
+    <section style={{padding:"100px 40px",background:"#f8f7ff"}}>
+      <div style={{maxWidth:1280,margin:"0 auto"}}>
+        <div style={{textAlign:"center",marginBottom:64}}>
+          <div style={{fontSize:12.5,color:V,fontWeight:700,letterSpacing:2.5,textTransform:"uppercase",marginBottom:12}}>Avis clients</div>
+          <h2 style={{fontSize:"clamp(28px,3.5vw,46px)",fontWeight:800,color:"#111",fontFamily:"'Syne',sans-serif",letterSpacing:-1.5}}>Ce que disent nos utilisateurs</h2>
+        </div>
+        <div style={{display:"flex",gap:24,flexWrap:"wrap"}}>
+          {list.map(t=>(
+            <div key={t.name} style={{flex:"1 1 280px",minWidth:260,background:"#fff",borderRadius:22,padding:"32px 28px",boxShadow:"0 4px 24px rgba(108,59,255,0.07)",border:"1px solid #ede9fe"}}>
+              <div style={{display:"flex",gap:2,marginBottom:14}}>{Array.from({length:t.stars}).map((_,i)=><span key={i} style={{color:"#f59e0b",fontSize:17}}>★</span>)}</div>
+              <p style={{fontSize:14.5,color:"#444",lineHeight:1.7,marginBottom:20,fontStyle:"italic"}}>"{t.text}"</p>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <div style={{width:44,height:44,borderRadius:"50%",background:`linear-gradient(135deg,${V},${VL})`,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:18}}>{t.av}</div>
+                <div><div style={{fontWeight:700,fontSize:15,color:"#111"}}>{t.name}</div><div style={{fontSize:12,color:"#aaa"}}>{t.role}</div></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 }
 
-.btn{
-background:#0d6efd;
-color:white;
-padding:15px 30px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-font-size:18px;
+function CTA() {
+  return (
+    <section style={{padding:"80px 40px",background:"#fff"}}>
+      <div style={{maxWidth:900,margin:"0 auto"}}>
+        <div style={{background:`linear-gradient(135deg,${V},${VD})`,borderRadius:32,padding:"64px 48px",textAlign:"center",boxShadow:"0 32px 80px rgba(108,59,255,0.3)",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-60,right:-60,width:240,height:240,borderRadius:"50%",background:"rgba(255,255,255,0.06)",pointerEvents:"none"}}/>
+          <div style={{position:"absolute",bottom:-40,left:-40,width:180,height:180,borderRadius:"50%",background:"rgba(255,255,255,0.04)",pointerEvents:"none"}}/>
+          <div style={{fontSize:48,marginBottom:14}}>🚀</div>
+          <h2 style={{fontSize:"clamp(24px,4vw,42px)",fontWeight:800,color:"#fff",fontFamily:"'Syne',sans-serif",letterSpacing:-1,marginBottom:16}}>Prêt à révolutionner votre logistique ?</h2>
+          <p style={{color:"rgba(255,255,255,0.8)",fontSize:17,maxWidth:520,margin:"0 auto 40px"}}>Rejoignez plus de 8 500 entreprises qui font confiance à FreightMatch au Maroc.</p>
+          <div style={{display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap"}}>
+            <button style={{padding:"15px 34px",borderRadius:12,border:"none",background:"#fff",color:V,fontWeight:700,fontSize:15.5,cursor:"pointer",transition:"all 0.25s"}}
+              onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>Créer un compte gratuit</button>
+            <button style={{padding:"15px 34px",borderRadius:12,border:"2px solid rgba(255,255,255,0.4)",background:"transparent",color:"#fff",fontWeight:600,fontSize:15.5,cursor:"pointer",transition:"all 0.25s"}}
+              onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.12)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>Voir une démo</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
-.services{
-display:flex;
-justify-content:center;
-gap:30px;
-padding:50px;
-flex-wrap:wrap;
+function Footer() {
+  return (
+    <footer style={{background:"#0a0a0a",padding:"64px 40px 32px"}}>
+      <div style={{maxWidth:1280,margin:"0 auto"}}>
+        <div style={{display:"flex",gap:48,flexWrap:"wrap",marginBottom:48}}>
+          <div style={{flex:"2 1 240px"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+              <img src="/mnt/user-data/uploads/icon.png" alt="FreightMatch" style={{width:42,height:42,borderRadius:10,objectFit:"cover"}}/>
+              <span style={{fontWeight:800,fontSize:21,color:"#fff",fontFamily:"'Syne',sans-serif"}}>Freight<span style={{color:VL}}>Match</span></span>
+            </div>
+            <p style={{color:"#444",fontSize:14,lineHeight:1.75,maxWidth:300}}>La première plateforme marocaine de mise en relation intelligente entre entreprises et transporteurs routiers.</p>
+            <div style={{display:"flex",gap:10,marginTop:20}}>
+              {["📘","🐦","💼","📸"].map(icon=>(
+                <div key={icon} style={{width:38,height:38,borderRadius:10,background:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:17,transition:"background 0.2s"}}
+                  onMouseEnter={e=>e.currentTarget.style.background="rgba(108,59,255,0.3)"} onMouseLeave={e=>e.currentTarget.style.background="rgba(255,255,255,0.06)"}>{icon}</div>
+              ))}
+            </div>
+          </div>
+          {[{title:"Plateforme",links:["Comment ça marche","Tarifs","Partenaires","API"]},{title:"Entreprises",links:["Publier une demande","Suivi livraison","Facturation","Support"]},{title:"Transporteurs",links:["Rejoindre","Missions","Revenus","Formation"]}].map(col=>(
+            <div key={col.title} style={{flex:"1 1 140px"}}>
+              <div style={{color:"#fff",fontWeight:700,fontSize:15,marginBottom:16}}>{col.title}</div>
+              {col.links.map(link=>(
+                <a key={link} href="#" style={{display:"block",color:"#444",fontSize:14,textDecoration:"none",marginBottom:10,transition:"color 0.2s"}}
+                  onMouseEnter={e=>e.target.style.color=VL} onMouseLeave={e=>e.target.style.color="#444"}>{link}</a>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:24,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:16}}>
+          <div style={{color:"#333",fontSize:13}}>© 2025 FreightMatch · Made in 🇲🇦 Morocco</div>
+          <div style={{display:"flex",gap:20}}>
+            {["Conditions d'utilisation","Confidentialité","Cookies"].map(l=>(
+              <a key={l} href="#" style={{color:"#333",fontSize:13,textDecoration:"none"}}
+                onMouseEnter={e=>e.target.style.color=VL} onMouseLeave={e=>e.target.style.color="#333"}>{l}</a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 }
 
-.card{
-background:white;
-padding:25px;
-width:300px;
-border-radius:12px;
-box-shadow:0 2px 10px rgba(0,0,0,0.1);
-text-align:center;
+export default function App() {
+  return (
+    <div style={{fontFamily:"'DM Sans',sans-serif",margin:0,padding:0,overflowX:"hidden"}}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:#fff;}
+        ::-webkit-scrollbar{width:6px;}
+        ::-webkit-scrollbar-track{background:#f8f7ff;}
+        ::-webkit-scrollbar-thumb{background:#6C3BFF;border-radius:3px;}
+      `}</style>
+      <Navbar/>
+      <Hero/>
+      <HowItWorks/>
+      <Features/>
+      <Dashboards/>
+      <Testimonials/>
+      <CTA/>
+      <Footer/>
+    </div>
+  );
 }
-
-footer{
-background:#0d6efd;
-color:white;
-text-align:center;
-padding:20px;
-margin-top:40px;
-}
-</style>
-
-</head>
-<body>
-
-<nav>
-<h2>🚛 FreightMatch</h2>
-
-<ul>
-<li><a href="#">Accueil</a></li>
-<li><a href="#">Transporteurs</a></li>
-<li><a href="#">Entreprises</a></li>
-<li><a href="#">Contact</a></li>
-</ul>
-</nav>
-
-<section class="hero">
-<h1>Connecter les transporteurs et les entreprises</h1>
-
-<p>
-Optimisez vos trajets, réduisez les coûts logistiques
-et trouvez rapidement des opportunités de transport.
-</p>
-
-<button class="btn">
-Publier une offre
-</button>
-</section>
-
-<section class="services">
-
-<div class="card">
-<h3>📦 Entreprises</h3>
-<p>
-Publiez vos besoins de transport en quelques clics.
-</p>
-</div>
-
-<div class="card">
-<h3>🚚 Transporteurs</h3>
-<p>
-Trouvez des marchandises à transporter.
-</p>
-</div>
-
-<div class="card">
-<h3>🤝 Matching Intelligent</h3>
-<p>
-Mise en relation rapide et efficace.
-</p>
-</div>
-
-</section>
-
-<footer>
-© 2026 FreightMatch - Tous droits réservés
-</footer>
-
-</body>
-</html>
