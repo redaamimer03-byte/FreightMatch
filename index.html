@@ -1,21 +1,156 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FreightMatch</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreightMatch</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, sans-serif;
+}
+
+body{
+background:#f5f7fa;
+}
+
+nav{
+background:#0d6efd;
+color:white;
+padding:15px 50px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+nav ul{
+display:flex;
+list-style:none;
+gap:20px;
+}
+
+nav a{
+color:white;
+text-decoration:none;
+font-weight:bold;
+}
+
+.hero{
+height:80vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+padding:20px;
+}
+
+.hero h1{
+font-size:50px;
+color:#0d6efd;
+margin-bottom:20px;
+}
+
+.hero p{
+font-size:20px;
+max-width:700px;
+margin-bottom:30px;
+}
+
+.btn{
+background:#0d6efd;
+color:white;
+padding:15px 30px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-size:18px;
+}
+
+.services{
+display:flex;
+justify-content:center;
+gap:30px;
+padding:50px;
+flex-wrap:wrap;
+}
+
+.card{
+background:white;
+padding:25px;
+width:300px;
+border-radius:12px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+footer{
+background:#0d6efd;
+color:white;
+text-align:center;
+padding:20px;
+margin-top:40px;
+}
+</style>
+
 </head>
 <body>
 
-    <h1>🚛 FreightMatch</h1>
+<nav>
+<h2>🚛 FreightMatch</h2>
 
-    <p>
-        Plateforme intelligente de mise en relation
-        entre entreprises et transporteurs.
-    </p>
+<ul>
+<li><a href="#">Accueil</a></li>
+<li><a href="#">Transporteurs</a></li>
+<li><a href="#">Entreprises</a></li>
+<li><a href="#">Contact</a></li>
+</ul>
+</nav>
 
-    <button>Publier une offre</button>
-    <button>Chercher un transport</button>
+<section class="hero">
+<h1>Connecter les transporteurs et les entreprises</h1>
+
+<p>
+Optimisez vos trajets, réduisez les coûts logistiques
+et trouvez rapidement des opportunités de transport.
+</p>
+
+<button class="btn">
+Publier une offre
+</button>
+</section>
+
+<section class="services">
+
+<div class="card">
+<h3>📦 Entreprises</h3>
+<p>
+Publiez vos besoins de transport en quelques clics.
+</p>
+</div>
+
+<div class="card">
+<h3>🚚 Transporteurs</h3>
+<p>
+Trouvez des marchandises à transporter.
+</p>
+</div>
+
+<div class="card">
+<h3>🤝 Matching Intelligent</h3>
+<p>
+Mise en relation rapide et efficace.
+</p>
+</div>
+
+</section>
+
+<footer>
+© 2026 FreightMatch - Tous droits réservés
+</footer>
 
 </body>
 </html>
